@@ -6,12 +6,13 @@ __pycache__/
 venv/
 .env
 *.env
-
 # Игнорируем файлы кеша и временные файлы
+nspd_parser.egg-info
 .DS_Store
 *.log
 *.swp
 *.swo
+dist
 
 # Игнорируем файлы зависимостей
 pip-log.txt

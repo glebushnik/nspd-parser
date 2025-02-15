@@ -3,8 +3,8 @@ import argparse
 import openpyxl
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
-from bot import nspd_bot
-from config import fields
+from nspd_parser.bot import nspd_bot
+from nspd_parser.config import fields
 
 
 def parse_egrn_data(text):

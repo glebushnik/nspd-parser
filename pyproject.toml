@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nspd-parser"
+version = "0.1.0"
+description = "Парсер данных NSPD.GOV.RU/ЕГРН для работы с кадастровыми номерами"
+authors = [
+  { name = "Gleb Timoshenko", email = "glebushnik@gmail.com" }
+]
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.6"
+dependencies = [
+  "selenium",
+  "openpyxl"
+]
