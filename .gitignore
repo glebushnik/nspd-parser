@@ -1,0 +1,18 @@
+# Игнорируем файлы кеша Python
+__pycache__/
+*.py[cod]
+
+# Игнорируем файлы виртуального окружения
+venv/
+.env
+*.env
+
+# Игнорируем файлы кеша и временные файлы
+.DS_Store
+*.log
+*.swp
+*.swo
+
+# Игнорируем файлы зависимостей
+pip-log.txt
+pip-delete-this-directory.txt
