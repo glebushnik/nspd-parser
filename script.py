@@ -71,29 +71,26 @@ def main():
     )
     args = parser.parse_args()
 
-    # Чтение входного JSON файла с кадастровыми номерами
     with open(args.input_file, "r", encoding="utf-8") as file:
         cad_numbers = json.load(file)
 
     results_list = []
     counter = 1
     for cad_number in cad_numbers:
-        # Инициализация драйвера (при необходимости можно добавить headless-режим)
         driver = webdriver.Chrome()
         act = ActionChains(driver)
 
-        # Получаем содержимое страницы по кадастровому номеру
+
         content = nspd_bot(cad_number, driver, act)
         driver.quit()
 
-        # Парсинг данных и добавление в список результатов
+
         parsed_data = parse_egrn_data(content)
         results_list.append(parsed_data)
 
         print(f'Данные для {cad_number} успешно обработаны ({counter}/{len(cad_numbers)}).')
         counter += 1
 
-    # Сохранение результатов в выбранном формате
     if args.format == "xlsx":
         save_to_xlsx(results_list, args.output)
     elif args.format == "json":
