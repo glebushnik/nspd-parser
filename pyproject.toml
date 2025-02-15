@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nspd-parser"
-version = "0.1.0"
+version = "0.1.2"
 description = "Парсер данных NSPD.GOV.RU/ЕГРН для работы с кадастровыми номерами"
 authors = [
   { name = "Gleb Timoshenko", email = "glebushnik@gmail.com" }
