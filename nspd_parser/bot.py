@@ -19,7 +19,7 @@ def nspd_bot(cad_number, driver, act):
     except Exception:
         pass
 
-    time.sleep(3)
+    time.sleep(3.5)
 
     driver.find_element(By.XPATH, "//div[@id='map']//m-sidebar").click()
 

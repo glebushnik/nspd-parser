@@ -1,10 +1,13 @@
 import json
 import argparse
+from pathlib import Path
+
 import openpyxl
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
-from nspd_parser.bot import nspd_bot
-from nspd_parser.config import fields
+
+from bot import nspd_bot
+from config import fields
 
 
 def parse_egrn_data(text):
@@ -29,73 +32,80 @@ def parse_egrn_data(text):
     return data
 
 
-def save_to_xlsx(data_list, filename):
-    """
-    Сохраняет список словарей data_list в Excel-файл.
-    Заголовки формируются как объединение всех ключей из всех словарей.
-    """
+def init_xlsx(filename):
+    """Инициализирует XLSX файл с заголовками"""
     wb = openpyxl.Workbook()
     ws = wb.active
-
-    all_keys = set()
-    for data in data_list:
-        all_keys.update(data.keys())
-    header = sorted(list(all_keys))
-    ws.append(header)
-
-    for data in data_list:
-        row = [data.get(key, "") for key in header]
-        ws.append(row)
-
+    ws.append(["Кадастровый номер", "Адрес", "Площадь", "Координаты границ", "Статус"])
     wb.save(filename)
 
 
-def save_to_json(data_list, filename):
-    """
-    Сохраняет список словарей data_list в JSON-файл.
-    """
+def append_to_xlsx(data, filename):
+    """Добавляет запись в XLSX файл"""
+    wb = openpyxl.load_workbook(filename)
+    ws = wb.active
+    row = [
+        data.get('Кадастровый номер', ''),
+        data.get('Адрес', ''),
+        data.get('Площадь', ''),
+        data.get('Координаты границ', ''),
+        data.get('Статус', '')
+    ]
+    ws.append(row)
+    wb.save(filename)
+
+
+def append_to_json(data, filename):
+    """Добавляет запись в JSON файл"""
+    records = []
+    if Path(filename).exists():
+        with open(filename, "r", encoding="utf-8") as f:
+            records = json.load(f)
+
+    records.append(data)
+
     with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data_list, f, ensure_ascii=False, indent=4)
+        json.dump(records, f, ensure_ascii=False, indent=4)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Парсинг данных ЕГРН по кадастровым номерам")
-    parser.add_argument("input_file", help="Путь к входному файлу формата JSON с кадастровыми номерами")
-    parser.add_argument(
-        "-o", "--output", default="земельный_участок.xlsx",
-        help="Путь к выходному файлу (по умолчанию: земельный_участок.xlsx)"
-    )
-    parser.add_argument(
-        "-f", "--format", choices=["json", "xlsx"], default="xlsx",
-        help="Выходной формат (json или xlsx, по умолчанию xlsx)"
-    )
+    parser = argparse.ArgumentParser(description="Парсинг данных ЕГРН")
+    parser.add_argument("input_file", help="JSON файл с кадастровыми номерами")
+    parser.add_argument("-o", "--output", default="output.xlsx",
+                        help="Выходной файл (по умолчанию: output.xlsx)")
+    parser.add_argument("-f", "--format", choices=["json", "xlsx"], default="xlsx",
+                        help="Формат вывода (по умолчанию: xlsx)")
     args = parser.parse_args()
 
-    with open(args.input_file, "r", encoding="utf-8") as file:
-        cad_numbers = json.load(file)
-
-    results_list = []
-    counter = 1
-    for cad_number in cad_numbers:
-        driver = webdriver.Chrome()
-        act = ActionChains(driver)
-
-
-        content = nspd_bot(cad_number, driver, act)
-        driver.quit()
-
-
-        parsed_data = parse_egrn_data(content)
-        results_list.append(parsed_data)
-
-        print(f'Данные для {cad_number} успешно обработаны ({counter}/{len(cad_numbers)}).')
-        counter += 1
-
+    # Инициализация файла
     if args.format == "xlsx":
-        save_to_xlsx(results_list, args.output)
-    elif args.format == "json":
-        save_to_json(results_list, args.output)
-    print(f'\nВсе данные сохранены в файл: {args.output}')
+        init_xlsx(args.output)
+    elif args.format == "json" and not Path(args.output).exists():
+        with open(args.output, "w") as f:
+            json.dump([], f)
+
+    with open(args.input_file, "r", encoding="utf-8") as f:
+        cad_numbers = json.load(f)
+
+    for i, cad_number in enumerate(cad_numbers, 1):
+        try:
+            driver = webdriver.Chrome()
+            act = ActionChains(driver)
+
+            content = nspd_bot(cad_number, driver, act)
+            parsed_data = parse_egrn_data(content)
+
+            if args.format == "xlsx":
+                append_to_xlsx(parsed_data, args.output)
+            elif args.format == "json":
+                append_to_json(parsed_data, args.output)
+
+            print(f"Обработано {i}/{len(cad_numbers)}: {cad_number}")
+
+        except Exception as e:
+            print(f"Ошибка при обработке {cad_number}: {str(e)}")
+        finally:
+            driver.quit()
 
 
 if __name__ == "__main__":
